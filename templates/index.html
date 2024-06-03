@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skin Lesion Classifier</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            justify-content: center;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 300px;
+        }
+        .file-input-container {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .file-input-label {
+            font-size: 16px;
+            border: 1px solid #ccc;
+            display: inline-block;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .file-input-hidden {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+            height: 100%;
+            width: 100%;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            text-align: center;
+        }
+        #result p {
+            background: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Skin Lesion Classifier</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <div class="file-input-container">
+            <label class="file-input-label" for="imageInput">Choose File</label>
+            <input type="file" name="image" id="imageInput" class="file-input-hidden">
+        </div>
+        <button type="submit">Upload</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            const fileInput = document.getElementById('imageInput');
+            formData.append('image', fileInput.files[0]);
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = '';
+                for (const [key, value] of Object.entries(data.confidence_scores)) {
+                    const confidence = document.createElement('p');
+                    confidence.innerText = `${key}: ${value}%`;
+                    resultDiv.appendChild(confidence);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = '<p style="color:red;">An error occurred while processing your request.</p>';
+            });
+        });
+
+        document.getElementById('imageInput').addEventListener('change', function() {
+            const fileName = this.files[0] ? this.files[0].name : 'Choose File';
+            document.querySelector('.file-input-label').textContent = fileName;
+        });
+    </script>
+</body>
+</html>
